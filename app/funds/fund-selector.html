@@ -1,0 +1,29 @@
+<div>
+    <div class="form-group">
+        <div class="input-group">
+        <label class="input-group-addon">Scheme Type: </label>
+        <select class="form-control" data-ng-model="selectedSchemeType" data-ng-change="filterFundList()">
+            <option value="">Any</option>
+            <option data-ng-repeat="st in schemeTypes" value="{{st}}">{{st}}</option>
+        </select>
+        </div>
+        <div class="input-group">
+        <label class="input-group-addon">Fund House: </label>
+        <select class="form-control" data-ng-model="selectedFundName" data-ng-change="filterFundList()">
+            <option value="">Any</option>
+            <option data-ng-repeat="fn in fundNames" value="{{fn}}">{{fn}}</option>
+        </select>
+        </div>
+        <div class="input-group">
+        <label class="input-group-addon">Fund Name: </label>
+        <input type="text" class="form-control" placeholder="Type a Scheme Name"
+               data-ng-model="selectedScheme"
+               uib-typeahead="fund as fund.schemeName for fund in filteredList | filter:{schemeName:$viewValue} | limitTo:10"
+               typeahead-show-hint="true"
+               typeahead-min-length="1"
+               typeahead-editable="false">
+        </div>
+    </div>
+
+    <button class="btn btn-success" data-ng-click="goToFund()">See Fund Details</button>
+</div>
