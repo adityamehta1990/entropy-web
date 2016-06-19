@@ -3,30 +3,29 @@
  */
 'use strict';
 
-// A RESTful factory for retrieving fund data
-module.exports = ['$http',
-    function($http) {
-        var factory = {};
-        var path = 'http://' + window.location.hostname + ':8081/';
+var _ = require('lodash');
 
-        var funds = $http.get(path + 'fund-data/schemes').then(function(res) {
-            return res.data;
-        });
+// A RESTful factory for retrieving fund data
+module.exports = ['$http','dataService',
+    function($http,dataService) {
+        var factory = {};
+
+        var funds = dataService.getData('fund-data/schemes');
 
         factory.getAllFunds = function () {
             return funds;
         };
 
         factory.getFundData = function(schemeCode) {
-            return $http.get(path + 'fund-data/scheme/' + schemeCode).then(function(res) {
-                return res.data;
-            })
+            return dataService.getData('fund-data/scheme/' + schemeCode);
         };
 
         factory.getFundNAV = function(schemeCode) {
-            return $http.get(path + 'fund-data/returns/' + schemeCode).then(function(res) {
-                return res.data;
-            })
+            return dataService.getData('fund-data/nav/' + schemeCode, true);
+        };
+
+        factory.getFundReturn = function(schemeCode,period) {
+            return dataService.getData(_.join(['fund-data/return',schemeCode,period],'/'),true);
         };
 
         return factory;

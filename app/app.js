@@ -6,6 +6,7 @@ require('angular-animate');
 require('angular-ui-router');
 require('angular-ui-bootstrap');
 require('./funds/funds');
+require('./utils/utils');
 require('../dist/js/templateCache.js');
 
 // Declare app level module
@@ -15,7 +16,8 @@ var app = angular.module('myCio', [
     'ui.bootstrap',
     'ngAnimate',
     'myCio.funds',
-    'myCio.templates'
+    'myCio.utils',
+    'myCio.templates' // this gets populated from templateCache set by gulp
 ]);
 
 app.config(['$stateProvider','$urlRouterProvider',
