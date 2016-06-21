@@ -19,7 +19,7 @@ module.exports = ['$http',
                 if(isCurve) {
                     var curveData = [];
                     _.map(data.dates, function (val,idx) {
-                        curveData.push([moment(val).valueOf(), parseFloat(data.values[idx])]);
+                        curveData.push([moment.utc(val).valueOf(), parseFloat(data.values[idx])]);
                     });
                     return curveData;
                 } else {

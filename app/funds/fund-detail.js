@@ -38,7 +38,8 @@ module.exports = ['fundService','$stateParams',
                         name: 'Fund NAV',
                         data: res,
                         tooltip: {
-                            valueDecimals: 2
+                            valueDecimals: 2,
+                            xDateFormat: '%e %b %Y'
                         }
                     })
                 });
@@ -69,9 +70,13 @@ module.exports = ['fundService','$stateParams',
                     fundService.getFundReturn(schemeCode,$scope.chosenPeriod).then(function (res) {
                         returnChart.addSeries({
                             name: 'Fund Returns',
-                            data: res,
+                            data: _.map(res,function(val) {
+                                return [val[0], val[1]*100];
+                            }),
                             tooltip: {
-                                valueDecimals: 2
+                                valueDecimals: 2,
+                                valueSuffix: '%',
+                                xDateFormat: '%e %b %Y'
                             }
                         })
                     });

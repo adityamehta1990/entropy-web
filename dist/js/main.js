@@ -7,6 +7,7 @@ require('angular-animate');
 require('angular-ui-router');
 require('angular-ui-bootstrap');
 require('./funds/funds');
+require('./utils/utils');
 require('../dist/js/templateCache.js');
 
 // Declare app level module
@@ -16,7 +17,8 @@ var app = angular.module('myCio', [
     'ui.bootstrap',
     'ngAnimate',
     'myCio.funds',
-    'myCio.templates'
+    'myCio.utils',
+    'myCio.templates' // this gets populated from templateCache set by gulp
 ]);
 
 app.config(['$stateProvider','$urlRouterProvider',
@@ -31,7 +33,7 @@ app.config(['$stateProvider','$urlRouterProvider',
     }
 ]);
 
-},{"../dist/js/templateCache.js":6,"./funds/funds":5,"angular":13,"angular-animate":8,"angular-ui-bootstrap":10,"angular-ui-router":11,"jquery":15}],2:[function(require,module,exports){
+},{"../dist/js/templateCache.js":8,"./funds/funds":5,"./utils/utils":7,"angular":15,"angular-animate":10,"angular-ui-bootstrap":12,"angular-ui-router":13,"jquery":17}],2:[function(require,module,exports){
 /**
  * Created by Aditya on 6/12/2016.
  */
@@ -49,8 +51,15 @@ module.exports = ['fundService','$stateParams',
             templateUrl: '/templates/funds/fund-detail.html',
             link: function ($scope) {
                 var schemeCode = $stateParams.schemeCode;
-                // setup the highcharts options
-                var chartOptions = {
+                // meta data
+                fundService.getFundData(schemeCode).then(function(res) {
+                    $scope.fundData = _.mapKeys(res,function(val,key) {
+                        return _.startCase(key);
+                    });
+                });
+
+                // nav chart
+                var navChartOptions = {
                     chart: {
                         renderTo: 'nav-chart-container'
                     },
@@ -58,37 +67,62 @@ module.exports = ['fundService','$stateParams',
                         selected: 1
                     }
                 };
-
-                var navChart = new Highcharts.StockChart(chartOptions);
-
-                fundService.getFundData(schemeCode).then(function(res) {
-                    $scope.fundData = _.mapKeys(res,function(val,key) {
-                        return _.startCase(key);
-                    });
-                    navChart.setTitle({text: res.schemeName});
-                });
+                var navChart = new Highcharts.StockChart(navChartOptions);
 
                 fundService.getFundNAV(schemeCode).then(function(res) {
-                    var fundNavData = res;
-                    var navToPlot = [];
-                    // we need to format the data to show on highstocks
-                    _.map(fundNavData.navDates,function(val,idx) {
-                        navToPlot.push([ moment(val).valueOf(),parseFloat(fundNavData.nav[idx]) ]);
-                    });
-
                     navChart.addSeries({
                         name: 'Fund NAV',
-                        data: navToPlot,
+                        data: res,
                         tooltip: {
-                            valueDecimals: 2
+                            valueDecimals: 2,
+                            xDateFormat: '%e %b %Y'
                         }
                     })
                 });
+
+                // returns chart
+                var returnChartOptions = {
+                    chart: {
+                        renderTo: 'return-chart-container'
+                    },
+                    rangeSelector: {
+                        selected: 1
+                    }
+                };
+                var returnChart = new Highcharts.StockChart(returnChartOptions);
+
+                $scope.periods = {
+                    'Daily': '1d',
+                    'Monthly': '1m',
+                    'Yearly': '1y'
+                };
+                $scope.chosenPeriod = '1m';
+                $scope.changePeriod = function() {
+                    while(returnChart.series.length) {
+                        returnChart.series[0].remove(false);
+                    }
+                    returnChart.colorCounter = 0;
+                    returnChart.symbolCounter = 0;
+                    fundService.getFundReturn(schemeCode,$scope.chosenPeriod).then(function (res) {
+                        returnChart.addSeries({
+                            name: 'Fund Returns',
+                            data: _.map(res,function(val) {
+                                return [val[0], val[1]*100];
+                            }),
+                            tooltip: {
+                                valueDecimals: 2,
+                                valueSuffix: '%',
+                                xDateFormat: '%e %b %Y'
+                            }
+                        })
+                    });
+                };
+                $scope.changePeriod();
             }
         }
     }
 ];
-},{"highcharts/highstock":14,"lodash":16,"moment":17}],3:[function(require,module,exports){
+},{"highcharts/highstock":16,"lodash":18,"moment":19}],3:[function(require,module,exports){
 /**
  * Created by Aditya on 6/5/2016.
  */
@@ -140,43 +174,42 @@ module.exports = ['$state',
         }
     }
 ];
-},{"lodash":16}],4:[function(require,module,exports){
+},{"lodash":18}],4:[function(require,module,exports){
 /**
  * Created by Aditya on 5/29/2016.
  */
 'use strict';
 
-// A RESTful factory for retrieving fund data
-module.exports = ['$http',
-    function($http) {
-        var factory = {};
-        var path = 'http://' + window.location.hostname + ':8081/';
+var _ = require('lodash');
 
-        var funds = $http.get(path + 'fund-data/schemes').then(function(res) {
-            return res.data;
-        });
+// A RESTful factory for retrieving fund data
+module.exports = ['$http','dataService',
+    function($http,dataService) {
+        var factory = {};
+
+        var funds = dataService.getData('fund-data/schemes');
 
         factory.getAllFunds = function () {
             return funds;
         };
 
         factory.getFundData = function(schemeCode) {
-            return $http.get(path + 'fund-data/scheme/' + schemeCode).then(function(res) {
-                return res.data;
-            })
+            return dataService.getData('fund-data/scheme/' + schemeCode);
         };
 
         factory.getFundNAV = function(schemeCode) {
-            return $http.get(path + 'fund-data/returns/' + schemeCode).then(function(res) {
-                return res.data;
-            })
+            return dataService.getData('fund-data/nav/' + schemeCode, true);
+        };
+
+        factory.getFundReturn = function(schemeCode,period) {
+            return dataService.getData(_.join(['fund-data/return',schemeCode,period],'/'),true);
         };
 
         return factory;
     }
 ];
 
-},{}],5:[function(require,module,exports){
+},{"lodash":18}],5:[function(require,module,exports){
 /**
  * Created by Aditya on 5/29/2016.
  */
@@ -223,7 +256,52 @@ app.config(['$stateProvider','$urlRouterProvider',
 );
 
 module.exports = app;
-},{"./fund-detail":2,"./fund-selector":3,"./fund-service":4,"angular":13,"angular-ui-router":11}],6:[function(require,module,exports){
+},{"./fund-detail":2,"./fund-selector":3,"./fund-service":4,"angular":15,"angular-ui-router":13}],6:[function(require,module,exports){
+/**
+ * Created by Aditya on 6/19/2016.
+ */
+'use strict';
+
+var _ = require('lodash');
+var moment = require('moment');
+
+// A RESTful factory for retrieving fund data
+module.exports = ['$http',
+    function($http) {
+        var factory = {};
+        var path = 'http://' + window.location.hostname + ':5000/';
+
+        factory.getData = function(url,isCurve) {
+            return $http.get(path + url).then( function(res) {
+                var data = res.data.data;
+
+                if(isCurve) {
+                    var curveData = [];
+                    _.map(data.dates, function (val,idx) {
+                        curveData.push([moment.utc(val).valueOf(), parseFloat(data.values[idx])]);
+                    });
+                    return curveData;
+                } else {
+                    return data;
+                }
+            });
+        };
+
+        return factory;
+    }
+];
+
+},{"lodash":18,"moment":19}],7:[function(require,module,exports){
+/**
+ * Created by Aditya on 6/19/2016.
+ */
+var angular = require('angular');
+
+// we can add any general utility services here
+var app = angular.module('myCio.utils',[]);
+app.factory('dataService', require('./data-service'));
+
+},{"./data-service":6,"angular":15}],8:[function(require,module,exports){
 (function(module) {
 try {
   module = angular.module('myCio.templates');
@@ -377,7 +455,21 @@ module.run(['$templateCache', function($templateCache) {
     '    </div>\n' +
     '\n' +
     '    <div class="col-md-6">\n' +
-    '        <div id="nav-chart-container"></div>\n' +
+    '        <div class="col-md-12">\n' +
+    '            <h3>NAV</h3>\n' +
+    '            <div id="nav-chart-container"></div>\n' +
+    '        </div>\n' +
+    '\n' +
+    '        <div class="col-md-12">\n' +
+    '            <h3>Returns</h3>\n' +
+    '            <div class="input-group">\n' +
+    '            <label class="input-group-addon">Rolling Window: </label>\n' +
+    '            <select class="form-control" data-ng-model="chosenPeriod" data-ng-change="changePeriod()">\n' +
+    '                <option data-ng-repeat="(key,val) in periods" value="{{val}}">{{key}}</option>\n' +
+    '            </select>\n' +
+    '            </div>\n' +
+    '            <div id="return-chart-container"></div>\n' +
+    '        </div>\n' +
     '    </div>\n' +
     '</div>');
 }]);
@@ -423,7 +515,7 @@ module.run(['$templateCache', function($templateCache) {
 }]);
 })();
 
-},{}],7:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 /**
  * @license AngularJS v1.5.6
  * (c) 2010-2016 Google, Inc. http://angularjs.org
@@ -4573,11 +4665,11 @@ angular.module('ngAnimate', [])
 
 })(window, window.angular);
 
-},{}],8:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 require('./angular-animate');
 module.exports = 'ngAnimate';
 
-},{"./angular-animate":7}],9:[function(require,module,exports){
+},{"./angular-animate":9}],11:[function(require,module,exports){
 /*
  * angular-ui-bootstrap
  * http://angular-ui.github.io/bootstrap/
@@ -11925,12 +12017,12 @@ angular.module('ui.bootstrap.datepickerPopup').run(function() {!angular.$$csp().
 angular.module('ui.bootstrap.tooltip').run(function() {!angular.$$csp().noInlineStyle && !angular.$$uibTooltipCss && angular.element(document).find('head').prepend('<style type="text/css">[uib-tooltip-popup].tooltip.top-left > .tooltip-arrow,[uib-tooltip-popup].tooltip.top-right > .tooltip-arrow,[uib-tooltip-popup].tooltip.bottom-left > .tooltip-arrow,[uib-tooltip-popup].tooltip.bottom-right > .tooltip-arrow,[uib-tooltip-popup].tooltip.left-top > .tooltip-arrow,[uib-tooltip-popup].tooltip.left-bottom > .tooltip-arrow,[uib-tooltip-popup].tooltip.right-top > .tooltip-arrow,[uib-tooltip-popup].tooltip.right-bottom > .tooltip-arrow,[uib-tooltip-html-popup].tooltip.top-left > .tooltip-arrow,[uib-tooltip-html-popup].tooltip.top-right > .tooltip-arrow,[uib-tooltip-html-popup].tooltip.bottom-left > .tooltip-arrow,[uib-tooltip-html-popup].tooltip.bottom-right > .tooltip-arrow,[uib-tooltip-html-popup].tooltip.left-top > .tooltip-arrow,[uib-tooltip-html-popup].tooltip.left-bottom > .tooltip-arrow,[uib-tooltip-html-popup].tooltip.right-top > .tooltip-arrow,[uib-tooltip-html-popup].tooltip.right-bottom > .tooltip-arrow,[uib-tooltip-template-popup].tooltip.top-left > .tooltip-arrow,[uib-tooltip-template-popup].tooltip.top-right > .tooltip-arrow,[uib-tooltip-template-popup].tooltip.bottom-left > .tooltip-arrow,[uib-tooltip-template-popup].tooltip.bottom-right > .tooltip-arrow,[uib-tooltip-template-popup].tooltip.left-top > .tooltip-arrow,[uib-tooltip-template-popup].tooltip.left-bottom > .tooltip-arrow,[uib-tooltip-template-popup].tooltip.right-top > .tooltip-arrow,[uib-tooltip-template-popup].tooltip.right-bottom > .tooltip-arrow,[uib-popover-popup].popover.top-left > .arrow,[uib-popover-popup].popover.top-right > .arrow,[uib-popover-popup].popover.bottom-left > .arrow,[uib-popover-popup].popover.bottom-right > .arrow,[uib-popover-popup].popover.left-top > .arrow,[uib-popover-popup].popover.left-bottom > .arrow,[uib-popover-popup].popover.right-top > .arrow,[uib-popover-popup].popover.right-bottom > .arrow,[uib-popover-html-popup].popover.top-left > .arrow,[uib-popover-html-popup].popover.top-right > .arrow,[uib-popover-html-popup].popover.bottom-left > .arrow,[uib-popover-html-popup].popover.bottom-right > .arrow,[uib-popover-html-popup].popover.left-top > .arrow,[uib-popover-html-popup].popover.left-bottom > .arrow,[uib-popover-html-popup].popover.right-top > .arrow,[uib-popover-html-popup].popover.right-bottom > .arrow,[uib-popover-template-popup].popover.top-left > .arrow,[uib-popover-template-popup].popover.top-right > .arrow,[uib-popover-template-popup].popover.bottom-left > .arrow,[uib-popover-template-popup].popover.bottom-right > .arrow,[uib-popover-template-popup].popover.left-top > .arrow,[uib-popover-template-popup].popover.left-bottom > .arrow,[uib-popover-template-popup].popover.right-top > .arrow,[uib-popover-template-popup].popover.right-bottom > .arrow{top:auto;bottom:auto;left:auto;right:auto;margin:0;}[uib-popover-popup].popover,[uib-popover-html-popup].popover,[uib-popover-template-popup].popover{display:block !important;}</style>'); angular.$$uibTooltipCss = true; });
 angular.module('ui.bootstrap.timepicker').run(function() {!angular.$$csp().noInlineStyle && !angular.$$uibTimepickerCss && angular.element(document).find('head').prepend('<style type="text/css">.uib-time input{width:50px;}</style>'); angular.$$uibTimepickerCss = true; });
 angular.module('ui.bootstrap.typeahead').run(function() {!angular.$$csp().noInlineStyle && !angular.$$uibTypeaheadCss && angular.element(document).find('head').prepend('<style type="text/css">[uib-typeahead-popup].dropdown-menu{display:block;}</style>'); angular.$$uibTypeaheadCss = true; });
-},{}],10:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 require('./dist/ui-bootstrap-tpls');
 
 module.exports = 'ui.bootstrap';
 
-},{"./dist/ui-bootstrap-tpls":9}],11:[function(require,module,exports){
+},{"./dist/ui-bootstrap-tpls":11}],13:[function(require,module,exports){
 /**
  * State-based routing for AngularJS
  * @version v0.3.0
@@ -16506,7 +16598,7 @@ angular.module('ui.router.state')
   .filter('isState', $IsStateFilter)
   .filter('includedByState', $IncludedByStateFilter);
 })(window, window.angular);
-},{}],12:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 /**
  * @license AngularJS v1.5.6
  * (c) 2010-2016 Google, Inc. http://angularjs.org
@@ -47530,11 +47622,11 @@ $provide.value("$locale", {
 })(window);
 
 !window.angular.$$csp().noInlineStyle && window.angular.element(document.head).prepend('<style type="text/css">@charset "UTF-8";[ng\\:cloak],[ng-cloak],[data-ng-cloak],[x-ng-cloak],.ng-cloak,.x-ng-cloak,.ng-hide:not(.ng-hide-animate){display:none !important;}ng\\:form{display:block;}.ng-animate-shim{visibility:hidden;}.ng-anchor{position:absolute;}</style>');
-},{}],13:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 require('./angular');
 module.exports = angular;
 
-},{"./angular":12}],14:[function(require,module,exports){
+},{"./angular":14}],16:[function(require,module,exports){
 /*
  Highstock JS v4.2.5 (2016-05-06)
 
@@ -47970,7 +48062,7 @@ if(this.modifyValue)b=[this.modifyValue(this.dataMin),this.modifyValue(this.data
 this.xAxis)!this.clipBox&&this.animate?(this.clipBox=z(this.chart.clipBox),this.clipBox.width=this.xAxis.len,this.clipBox.height=this.yAxis.len):this.chart[this.sharedClipKey]&&(Sa(this.chart[this.sharedClipKey]),this.chart[this.sharedClipKey].attr({width:this.xAxis.len,height:this.yAxis.len}));a.call(this)});A(B,{Color:va,Point:Ha,Tick:bb,Renderer:Xa,SVGElement:Z,SVGRenderer:xa,arrayMin:Ma,arrayMax:Da,charts:$,correctFloat:ka,dateFormat:na,error:ga,format:La,pathAnim:void 0,getOptions:function(){return R},
 hasBidiBug:Zb,isTouchDevice:jb,setOptions:function(a){R=z(!0,R,a);Ob();return R},addEvent:E,removeEvent:T,createElement:fa,discardElement:Ua,css:N,each:o,map:ta,merge:z,splat:ua,stableSort:nb,extendClass:ma,pInt:K,svg:ja,canvas:qa,vml:!ja&&!qa,product:"Highstock",version:"4.2.5"});return B});
 
-},{}],15:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 /*!
  * jQuery JavaScript Library v2.2.4
  * http://jquery.com/
@@ -57786,7 +57878,7 @@ if ( !noGlobal ) {
 return jQuery;
 }));
 
-},{}],16:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 (function (global){
 /**
  * @license
@@ -74194,7 +74286,7 @@ return jQuery;
 }.call(this));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],17:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 //! moment.js
 //! version : 2.13.0
 //! authors : Tim Wood, Iskren Chernev, Moment.js contributors
