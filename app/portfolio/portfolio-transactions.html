@@ -1,0 +1,56 @@
+<div class="row col-sm-12">
+    <div>
+        <table class="table table-condensed table-hover">
+            <thead>
+            <tr>
+                <th>Date</th>
+                <th>Fund</th>
+                <th>Cash Flow</th>
+                <th>Quantity</th>
+                <th>Price</th>
+                <th>
+                    <button class="btn btn-success" data-ng-click="showNewTransactionRow = true">
+                        <span class="fa fa-plus"></span> Add
+                    </button>
+                </th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr data-ng-show="showNewTransactionRow">
+                <td><input type="text" class="form-control" data-ng-model="newTxn.date"></td>
+                <td><input type="text" class="form-control" data-ng-model="newTxn.schemeName"></td>
+                <td><input type="number" class="form-control" data-ng-model="newTxn.cashflow"></td>
+                <td>{{newTxn.quantity}}</td>
+                <td>{{newTxn.price}}</td>
+                <td>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn" data-ng-click="addTransaction()">
+                            <span class="fa fa-check"></span>
+                        </button>
+                        <button class="btn btn-default" data-ng-click="clearNewTransaction()">
+                            <span class="fa fa-remove"></span>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            <tr data-ng-repeat="txn in transactionList">
+                <td>{{txn.date | date:'mediumDate'}}</td>
+                <td>{{txn.schemeName}}</td>
+                <td>{{txn.cashflow}}</td>
+                <td>{{txn.quantity}}</td>
+                <td>{{txn.price}}</td>
+                <td>
+                    <div class="btn-group btn-group-sm" style="margin: 0px">
+                    <button class="btn" data-ng-click="editTransaction(txn.transactionId)">
+                        <span class="fa fa-pencil"></span>
+                    </button>
+                    <button class="btn btn-default" data-ng-click="deleteTransaction(txn.transactionId)">
+                        <span class="fa fa-remove"></span>
+                    </button>
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

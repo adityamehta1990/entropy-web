@@ -28,6 +28,24 @@ module.exports = ['$http',
             });
         };
 
+        factory.postData = function(url,data) {
+            return $http.post(url,data).then( function(res) {
+                return res;
+            });
+        };
+
+        factory.putData = function(url,data) {
+            return $http.put(url,data).then( function(res) {
+                return res;
+            });
+        };
+
+        factory.deleteData = function(url) {
+            return $http.delete(url).then( function(res) {
+                return res;
+            });
+        };
+
         return factory;
     }
 ];

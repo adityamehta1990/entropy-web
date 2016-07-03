@@ -47,6 +47,12 @@ gulp.task('sass', function() {
         .pipe(gulp.dest('./dist/css'));
 });
 
+gulp.task('fonts', function() {
+    console.log('running font awesome');
+    return gulp.src('./node_modules/font-awesome/fonts/**.*')
+        .pipe(gulp.dest('./dist/fonts'));
+});
+
 gulp.task('watch', function() {
     // run browserify if any js file changes
     gulp.watch('app/**/*.js', ['browserify']);
@@ -65,7 +71,7 @@ gulp.task('copy', function() {
 });
 
 // build html, js and css
-gulp.task('build',['copy','browserify','templates','sass']);
+gulp.task('build',['copy','browserify','templates','sass','fonts']);
 
 gulp.task('default', [
     'build',
