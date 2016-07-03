@@ -1,0 +1,51 @@
+<div class="row col-md-push-3 col-md-6">
+    <div data-ng-show="loginMode">
+        <h2>
+            Login
+            <span class="pull-right">
+                <button class="btn btn-success" data-ng-click="loginMode = false">New Client?</button>
+            </span>
+        </h2>
+
+        <form class="form" data-ng-submit="loginToClient()">
+            <div class="form-group">
+                <label>Client Name</label>
+                <input type="text" class="form-control" placeholder="Username" data-ng-model="clientName">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" class="form-control" placeholder="Password">
+            </div>
+            <button type="submit" class="btn btn-default">Submit</button>
+        </form>
+
+        <div class="alert alert-danger" role="alert" data-ng-show="invalidClient">
+            Oops, could not find client name
+        </div>
+    </div>
+
+    <div data-ng-hide="loginMode">
+        <h2>
+            Setup Your Portfolio
+            <span class="pull-right">
+                <button class="btn btn-success" data-ng-click="loginMode = true">Existing Client?</button>
+            </span>
+        </h2>
+
+        <form class="form" data-ng-submit="createClientPortfolio()">
+            <div class="form-group">
+                <label>Set Client Name</label>
+                <input type="text" class="form-control" placeholder="Username" data-ng-model="newClientName">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" class="form-control" placeholder="Password">
+            </div>
+            <button type="submit" class="btn btn-default">Submit</button>
+        </form>
+
+        <div class="alert alert-danger" role="alert" data-ng-show="clientExists">
+            Oops, client with given name already exists
+        </div>
+    </div>
+</div>

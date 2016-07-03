@@ -2,9 +2,11 @@
 
 var $ = require('jquery'); // jquery must be loaded before angular to use angular wrappers
 var angular = require('angular');
+var _ = require('lodash');
 require('angular-animate');
 require('angular-ui-router');
 require('angular-ui-bootstrap');
+require('./portfolio/portfolio');
 require('./funds/funds');
 require('./utils/utils');
 require('../dist/js/templateCache.js');
@@ -15,6 +17,7 @@ var app = angular.module('myCio', [
     'ui.router',
     'ui.bootstrap',
     'ngAnimate',
+    'myCio.portfolio',
     'myCio.funds',
     'myCio.utils',
     'myCio.templates' // this gets populated from templateCache set by gulp
@@ -27,7 +30,7 @@ app.config(['$stateProvider','$urlRouterProvider',
         $stateProvider
             .state('home',{
                 url: '/',
-                template: '<div>Landing Page</div>'
+                template: '<login-page></login-page>'
             });
     }
 ]);

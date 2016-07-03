@@ -1,0 +1,27 @@
+<div class="collapse navbar-collapse">
+    <ul class="nav navbar-nav">
+        <li class="dropdown">
+            <a href class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                Portfolios <span class="caret"></span>
+            </a>
+            <ul class="dropdown-menu">
+                <li data-ng-repeat="port in clientPortfolios">
+                    <a ui-sref="portfolio.overview()">{{port.portfolioName}}</a>
+                </li>
+            </ul>
+        </li>
+
+        <li ui-sref-active="active"><a ui-sref="funds.selector">Funds</a></li>
+    </ul>
+
+    <div class="navbar-form navbar-right" data-ng-show="isFundState">
+        <input type="text" class="form-control typeahead" placeholder="Type a Scheme Name"
+               data-ng-model="selectedScheme"
+               uib-typeahead="fund as fund.schemeName for fund in fundList | filter:{schemeName:$viewValue} | limitTo:10"
+               typeahead-show-hint="true"
+               typeahead-min-length="1"
+               typeahead-editable="false"
+               typeahead-on-select="goToFund()">
+    </div>
+    </div>
+</div>

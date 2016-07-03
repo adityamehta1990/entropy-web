@@ -3,9 +3,11 @@
 
 var $ = require('jquery'); // jquery must be loaded before angular to use angular wrappers
 var angular = require('angular');
+var _ = require('lodash');
 require('angular-animate');
 require('angular-ui-router');
 require('angular-ui-bootstrap');
+require('./portfolio/portfolio');
 require('./funds/funds');
 require('./utils/utils');
 require('../dist/js/templateCache.js');
@@ -16,6 +18,7 @@ var app = angular.module('myCio', [
     'ui.router',
     'ui.bootstrap',
     'ngAnimate',
+    'myCio.portfolio',
     'myCio.funds',
     'myCio.utils',
     'myCio.templates' // this gets populated from templateCache set by gulp
@@ -28,12 +31,12 @@ app.config(['$stateProvider','$urlRouterProvider',
         $stateProvider
             .state('home',{
                 url: '/',
-                template: '<div>Landing Page</div>'
+                template: '<login-page></login-page>'
             });
     }
 ]);
 
-},{"../dist/js/templateCache.js":8,"./funds/funds":5,"./utils/utils":7,"angular":15,"angular-animate":10,"angular-ui-bootstrap":12,"angular-ui-router":13,"jquery":17}],2:[function(require,module,exports){
+},{"../dist/js/templateCache.js":13,"./funds/funds":5,"./portfolio/portfolio":8,"./utils/utils":12,"angular":20,"angular-animate":15,"angular-ui-bootstrap":17,"angular-ui-router":18,"jquery":22,"lodash":23}],2:[function(require,module,exports){
 /**
  * Created by Aditya on 6/12/2016.
  */
@@ -58,15 +61,21 @@ module.exports = ['fundService','$stateParams',
                     });
                 });
 
-                // nav chart
-                var navChartOptions = {
-                    chart: {
-                        renderTo: 'nav-chart-container'
-                    },
+                var defaultChartOptions = {
                     rangeSelector: {
                         selected: 1
+                    },
+                    yAxis: {
+                        plotLines: [{
+                            color: 'black',
+                            width: 2,
+                            value: 0
+                        }]
                     }
                 };
+                // nav chart
+                var navChartOptions = angular.copy(defaultChartOptions);
+                _.set(navChartOptions,'chart.renderTo','nav-chart-container');
                 var navChart = new Highcharts.StockChart(navChartOptions);
 
                 fundService.getFundNAV(schemeCode).then(function(res) {
@@ -81,14 +90,8 @@ module.exports = ['fundService','$stateParams',
                 });
 
                 // returns chart
-                var returnChartOptions = {
-                    chart: {
-                        renderTo: 'return-chart-container'
-                    },
-                    rangeSelector: {
-                        selected: 1
-                    }
-                };
+                var returnChartOptions = angular.copy(defaultChartOptions);
+                _.set(returnChartOptions,'chart.renderTo','return-chart-container');
                 var returnChart = new Highcharts.StockChart(returnChartOptions);
 
                 $scope.periods = {
@@ -122,7 +125,7 @@ module.exports = ['fundService','$stateParams',
         }
     }
 ];
-},{"highcharts/highstock":16,"lodash":18,"moment":19}],3:[function(require,module,exports){
+},{"highcharts/highstock":21,"lodash":23,"moment":24}],3:[function(require,module,exports){
 /**
  * Created by Aditya on 6/5/2016.
  */
@@ -174,7 +177,7 @@ module.exports = ['$state',
         }
     }
 ];
-},{"lodash":18}],4:[function(require,module,exports){
+},{"lodash":23}],4:[function(require,module,exports){
 /**
  * Created by Aditya on 5/29/2016.
  */
@@ -209,7 +212,7 @@ module.exports = ['$http','dataService',
     }
 ];
 
-},{"lodash":18}],5:[function(require,module,exports){
+},{"lodash":23}],5:[function(require,module,exports){
 /**
  * Created by Aditya on 5/29/2016.
  */
@@ -256,7 +259,155 @@ app.config(['$stateProvider','$urlRouterProvider',
 );
 
 module.exports = app;
-},{"./fund-detail":2,"./fund-selector":3,"./fund-service":4,"angular":15,"angular-ui-router":13}],6:[function(require,module,exports){
+},{"./fund-detail":2,"./fund-selector":3,"./fund-service":4,"angular":20,"angular-ui-router":18}],6:[function(require,module,exports){
+/**
+ * Created by Aditya on 6/23/2016.
+ */
+'use strict';
+
+var _ = require('lodash');
+
+// A RESTful factory for retrieving fund data
+module.exports = ['$http','dataService',
+    function($http,dataService) {
+        var factory = {};
+
+        factory.getClientPortfolios = function(clientName) {
+            return dataService.getData('portfolio-data/client/' + clientName).then(function(res){
+                return res;
+            },function() {
+                return [];
+            });
+        };
+
+        factory.createNewPortfolio = function(portfolio) {
+            return dataService.postData(_.join(['portfolio-data','new'],'/'),portfolio);
+        };
+
+        factory.getPortfolioMetaData = function(portfolioId) {
+            return dataService.getData(_.join(['portfolio-data',portfolioId,'metadata'],'/'));
+        };
+
+        factory.getPortfolioTransactions = function(portfolioId) {
+            return dataService.getData(_.join(['portfolio-data',portfolioId,'transactions'],'/'));
+        };
+
+        factory.addNewTransactionToPortfolio = function(portfolioId,transaction) {
+            return dataService.postData(_.join(['portfolio-data',portfolioId,'transaction/new'],'/'),transaction);
+        };
+
+        factory.updateTransactionInPortfolio = function(portfolioId,transactionId,transaction) {
+            return dataService.putData(_.join(['portfolio-data',portfolioId,'transaction',transactionId],'/'),transaction);
+        };
+
+        factory.deleteTransactionFromPortfolio = function(portfolioId,transactionId) {
+            return dataService.deleteData(_.join(['portfolio-data',portfolioId,'transaction',transactionId],'/'));
+        };
+
+        factory.getPortfolioNAV = function(portfolioId) {
+            return dataService.getData(_.join(['portfolio-data',portfolioId,'nav'],'/'), true);
+        };
+
+        factory.getPortfolioReturn = function(portfolioId,period) {
+            return dataService.getData(_.join(['portfolio-data',portfolioId,'return',period],'/'),true);
+        };
+
+        return factory;
+    }
+];
+
+},{"lodash":23}],7:[function(require,module,exports){
+/**
+ * Created by Aditya on 6/26/2016.
+ */
+'use strict';
+
+var _ = require('lodash');
+var moment = require('moment');
+
+module.exports = ['portfolioService','$stateParams',
+    function(portfolioService,$stateParams) {
+        return {
+            restrict: 'E',
+            scope: {},
+            templateUrl: '/templates/portfolio/portfolio-transactions.html',
+            link: function ($scope) {
+                var portfolioId = $stateParams.portfolioId;
+                $scope.showNewTransactionRow = false;
+                $scope.newTxn = {};
+
+                $scope.reloadTransactionList = function() {
+                    portfolioService.getPortfolioTransactions(portfolioId).then(function (res) {
+                        $scope.transactionList = res;
+                    });
+                };
+
+                $scope.clearNewTransaction = function() {
+                    $scope.showNewTransactionRow = false;
+                    $scope.newTxn = {}
+                };
+
+                $scope.addTransaction = function() {
+                    portfolioService.addNewTransactionToPortfolio(portfolioId,$scope.newTxn);
+                    $scope.newTxn = {};
+                    $scope.reloadTransactionList();
+                };
+
+                $scope.deleteTransaction = function(txnId) {
+                    portfolioService.deleteTransactionFromPortfolio(portfolioId,txnId);
+                    $scope.reloadTransactionList();
+                };
+
+                // initialize transactions
+                $scope.reloadTransactionList();
+            }
+        }
+    }
+];
+},{"lodash":23,"moment":24}],8:[function(require,module,exports){
+/**
+ * Created by Aditya on 6/22/2016.
+ */
+
+require('angular-ui-router');
+var angular = require('angular');
+
+var app = angular.module('myCio.portfolio',['ui.router']);
+app.factory('portfolioService', require('./portfolio-service'));
+app.directive('portfolioTransactions', require('./portfolio-transactions'));
+
+// setup routes within the fund state
+app.config(['$stateProvider','$urlRouterProvider',
+        function($stateProvider,$urlRouterProvider) {
+
+            $urlRouterProvider.when('/portfolio/','/home');
+
+            $stateProvider
+                .state('portfolio', {
+                    abstract: true,
+                    url: '/portfolio/:portfolioId',
+                    templateUrl: '/templates/portfolio/portfolio.html'
+                })
+                // since this is a child state, it inherits scope from the above abstract state
+                // which we can directly use inside the directive!
+                .state('portfolio.overview', {
+                    url: '',
+                    template: 'Add this'
+                })
+                .state('portfolio.transactions', {
+                    url: '/transactions',
+                    template: '<portfolio-transactions></portfolio-transactions>'
+                })
+                .state('portfolio.analysis', {
+                    url: '/analysis',
+                    template: 'Coming soon...'
+                });
+        }
+    ]
+);
+
+module.exports = app;
+},{"./portfolio-service":6,"./portfolio-transactions":7,"angular":20,"angular-ui-router":18}],9:[function(require,module,exports){
 /**
  * Created by Aditya on 6/19/2016.
  */
@@ -287,11 +438,111 @@ module.exports = ['$http',
             });
         };
 
+        factory.postData = function(url,data) {
+            return $http.post(url,data).then( function(res) {
+                return res;
+            });
+        };
+
+        factory.putData = function(url,data) {
+            return $http.put(url,data).then( function(res) {
+                return res;
+            });
+        };
+
+        factory.deleteData = function(url) {
+            return $http.delete(url).then( function(res) {
+                return res;
+            });
+        };
+
         return factory;
     }
 ];
 
-},{"lodash":18,"moment":19}],7:[function(require,module,exports){
+},{"lodash":23,"moment":24}],10:[function(require,module,exports){
+/**
+ * Created by Aditya on 6/29/2016.
+ */
+'use strict';
+
+var _ = require('lodash');
+
+module.exports = ['portfolioService','$state',
+    function(portfolioService,$state) {
+        return {
+            restrict: 'E',
+            scope: {},
+            templateUrl: '/templates/utils/login-page.html',
+            link: function ($scope) {
+                // we can add encryption and authentication here
+                $scope.clientName = null;
+                $scope.loginMode = true;
+                $scope.loggedIn = false;
+
+                $scope.loginToClient = function () {
+                    // check if we get any client portfolios after which go to client page
+                    // this is a proxy for "authentication" right now
+                    portfolioService.getClientPortfolios($scope.clientName).then(function (portfolioList) {
+                        if (portfolioList) {
+                            $scope.invalidClient = false;
+                            $scope.loggedIn = true;
+                            $state.go('portfolio.overview', {
+                                portfolioId: portfolioList[0].portfolioId
+                            });
+                        } else {
+                            $scope.invalidClient = true;
+                        }
+                    }, function() {
+                        $scope.invalidClient = true;
+                    })
+                }
+            }
+        }
+    }
+];
+},{"lodash":23}],11:[function(require,module,exports){
+/**
+ * Created by Aditya on 6/29/2016.
+ */
+'use strict';
+
+var _ = require('lodash');
+
+module.exports = ['portfolioService','fundService','$stateParams','$state',
+    function(portfolioService,fundService,$stateParams,$state) {
+        return {
+            restrict: 'E',
+            scope: {},
+            templateUrl: '/templates/utils/navigator.html',
+            link: function ($scope) {
+
+                $scope.$on('$stateChangeSuccess',function(event, toState, toParams, fromState, fromParams) {
+                    $scope.isFundState = _.includes(toState.name,'fund');
+                    if(_.includes(toState.name,'fund')) {
+                        fundService.getAllFunds().then(function(res) {
+                            $scope.fundList = res;
+                        })
+                    }
+
+                    if(_.has(toParams,'clientName')) {
+                        var clientName = toParams.clientName;
+                        portfolioService.getClientPortfolios(clientName).then(function(res) {
+                            $scope.clientPortfolios = res;
+                        });
+                    }
+                });
+
+                $scope.goToFund = function() {
+                    var schemeCode = $scope.selectedScheme.schemeCode;
+                    $scope.selectedScheme = null;
+                    $state.go('funds.detail',{schemeCode: schemeCode});
+                };
+            }
+        }
+    }
+];
+},{"lodash":23}],12:[function(require,module,exports){
 /**
  * Created by Aditya on 6/19/2016.
  */
@@ -300,8 +551,10 @@ var angular = require('angular');
 // we can add any general utility services here
 var app = angular.module('myCio.utils',[]);
 app.factory('dataService', require('./data-service'));
+app.directive('navigator', require('./navigator'));
+app.directive('loginPage',require('./login-page'));
 
-},{"./data-service":6,"angular":15}],8:[function(require,module,exports){
+},{"./data-service":9,"./login-page":10,"./navigator":11,"angular":20}],13:[function(require,module,exports){
 (function(module) {
 try {
   module = angular.module('myCio.templates');
@@ -414,14 +667,10 @@ module.run(['$templateCache', function($templateCache) {
     '                        <span class="icon-bar"></span>\n' +
     '                        <span class="icon-bar"></span>\n' +
     '                    </button>\n' +
-    '                    <a class="navbar-brand" ui-sref="home">Portfolio Analyzer</a>\n' +
+    '                    <a class="navbar-brand" ui-sref="home"><span class="fa fa-home"></span></a>\n' +
     '                </div>\n' +
-    '                <div class="collapse navbar-collapse">\n' +
-    '                    <ul class="nav navbar-nav">\n' +
-    '                        <li ui-sref-active="active"><a ui-sref="portfolio">Portfolio</a></li>\n' +
-    '                        <li ui-sref-active="active"><a ui-sref="funds.selector">Funds</a></li>\n' +
-    '                    </ul>\n' +
-    '                </div>\n' +
+    '\n' +
+    '                <navigator></navigator>\n' +
     '            </div>\n' +
     '        </nav>\n' +
     '\n' +
@@ -515,7 +764,199 @@ module.run(['$templateCache', function($templateCache) {
 }]);
 })();
 
-},{}],9:[function(require,module,exports){
+(function(module) {
+try {
+  module = angular.module('myCio.templates');
+} catch (e) {
+  module = angular.module('myCio.templates', []);
+}
+module.run(['$templateCache', function($templateCache) {
+  $templateCache.put('/templates/portfolio/portfolio-transactions.html',
+    '<div class="row col-sm-12">\n' +
+    '    <div>\n' +
+    '        <table class="table table-condensed table-hover">\n' +
+    '            <thead>\n' +
+    '            <tr>\n' +
+    '                <th>Date</th>\n' +
+    '                <th>Fund</th>\n' +
+    '                <th>Cash Flow</th>\n' +
+    '                <th>Quantity</th>\n' +
+    '                <th>Price</th>\n' +
+    '                <th>\n' +
+    '                    <button class="btn btn-success" data-ng-click="showNewTransactionRow = true">\n' +
+    '                        <span class="fa fa-plus"></span> Add\n' +
+    '                    </button>\n' +
+    '                </th>\n' +
+    '            </tr>\n' +
+    '            </thead>\n' +
+    '            <tbody>\n' +
+    '            <tr data-ng-show="showNewTransactionRow">\n' +
+    '                <td><input type="text" class="form-control" data-ng-model="newTxn.date"></td>\n' +
+    '                <td><input type="text" class="form-control" data-ng-model="newTxn.schemeName"></td>\n' +
+    '                <td><input type="number" class="form-control" data-ng-model="newTxn.cashflow"></td>\n' +
+    '                <td>{{newTxn.quantity}}</td>\n' +
+    '                <td>{{newTxn.price}}</td>\n' +
+    '                <td>\n' +
+    '                    <div class="btn-group btn-group-sm">\n' +
+    '                        <button class="btn" data-ng-click="addTransaction()">\n' +
+    '                            <span class="fa fa-check"></span>\n' +
+    '                        </button>\n' +
+    '                        <button class="btn btn-default" data-ng-click="clearNewTransaction()">\n' +
+    '                            <span class="fa fa-remove"></span>\n' +
+    '                        </button>\n' +
+    '                    </div>\n' +
+    '                </td>\n' +
+    '            </tr>\n' +
+    '            <tr data-ng-repeat="txn in transactionList">\n' +
+    '                <td>{{txn.date | date:\'mediumDate\'}}</td>\n' +
+    '                <td>{{txn.schemeName}}</td>\n' +
+    '                <td>{{txn.cashflow}}</td>\n' +
+    '                <td>{{txn.quantity}}</td>\n' +
+    '                <td>{{txn.price}}</td>\n' +
+    '                <td>\n' +
+    '                    <div class="btn-group btn-group-sm" style="margin: 0px">\n' +
+    '                    <button class="btn" data-ng-click="editTransaction(txn.transactionId)">\n' +
+    '                        <span class="fa fa-pencil"></span>\n' +
+    '                    </button>\n' +
+    '                    <button class="btn btn-default" data-ng-click="deleteTransaction(txn.transactionId)">\n' +
+    '                        <span class="fa fa-remove"></span>\n' +
+    '                    </button>\n' +
+    '                    </div>\n' +
+    '                </td>\n' +
+    '            </tr>\n' +
+    '            </tbody>\n' +
+    '        </table>\n' +
+    '    </div>\n' +
+    '</div>');
+}]);
+})();
+
+(function(module) {
+try {
+  module = angular.module('myCio.templates');
+} catch (e) {
+  module = angular.module('myCio.templates', []);
+}
+module.run(['$templateCache', function($templateCache) {
+  $templateCache.put('/templates/portfolio/portfolio.html',
+    '<div>\n' +
+    '    <div class="container-fluid">\n' +
+    '        <ul class="nav nav-pills">\n' +
+    '            <li ui-sref-active="active"><a ui-sref="portfolio.overview">Overview</a></li>\n' +
+    '            <li ui-sref-active="active"><a ui-sref="portfolio.transactions">Transactions</a></li>\n' +
+    '            <li ui-sref-active="active"><a ui-sref="portfolio.analysis">Analysis</a></li>\n' +
+    '        </ul>\n' +
+    '    </div>\n' +
+    '\n' +
+    '    <div class="container slide">\n' +
+    '        <div ui-view></div>\n' +
+    '    </div>\n' +
+    '</div>');
+}]);
+})();
+
+(function(module) {
+try {
+  module = angular.module('myCio.templates');
+} catch (e) {
+  module = angular.module('myCio.templates', []);
+}
+module.run(['$templateCache', function($templateCache) {
+  $templateCache.put('/templates/utils/login-page.html',
+    '<div class="row col-md-push-3 col-md-6">\n' +
+    '    <div data-ng-show="loginMode">\n' +
+    '        <h2>\n' +
+    '            Login\n' +
+    '            <span class="pull-right">\n' +
+    '                <button class="btn btn-success" data-ng-click="loginMode = false">New Client?</button>\n' +
+    '            </span>\n' +
+    '        </h2>\n' +
+    '\n' +
+    '        <form class="form" data-ng-submit="loginToClient()">\n' +
+    '            <div class="form-group">\n' +
+    '                <label>Client Name</label>\n' +
+    '                <input type="text" class="form-control" placeholder="Username" data-ng-model="clientName">\n' +
+    '            </div>\n' +
+    '            <div class="form-group">\n' +
+    '                <label>Password</label>\n' +
+    '                <input type="password" class="form-control" placeholder="Password">\n' +
+    '            </div>\n' +
+    '            <button type="submit" class="btn btn-default">Submit</button>\n' +
+    '        </form>\n' +
+    '\n' +
+    '        <div class="alert alert-danger" role="alert" data-ng-show="invalidClient">\n' +
+    '            Oops, could not find client name\n' +
+    '        </div>\n' +
+    '    </div>\n' +
+    '\n' +
+    '    <div data-ng-hide="loginMode">\n' +
+    '        <h2>\n' +
+    '            Setup Your Portfolio\n' +
+    '            <span class="pull-right">\n' +
+    '                <button class="btn btn-success" data-ng-click="loginMode = true">Existing Client?</button>\n' +
+    '            </span>\n' +
+    '        </h2>\n' +
+    '\n' +
+    '        <form class="form" data-ng-submit="createClientPortfolio()">\n' +
+    '            <div class="form-group">\n' +
+    '                <label>Set Client Name</label>\n' +
+    '                <input type="text" class="form-control" placeholder="Username" data-ng-model="newClientName">\n' +
+    '            </div>\n' +
+    '            <div class="form-group">\n' +
+    '                <label>Password</label>\n' +
+    '                <input type="password" class="form-control" placeholder="Password">\n' +
+    '            </div>\n' +
+    '            <button type="submit" class="btn btn-default">Submit</button>\n' +
+    '        </form>\n' +
+    '\n' +
+    '        <div class="alert alert-danger" role="alert" data-ng-show="clientExists">\n' +
+    '            Oops, client with given name already exists\n' +
+    '        </div>\n' +
+    '    </div>\n' +
+    '</div>');
+}]);
+})();
+
+(function(module) {
+try {
+  module = angular.module('myCio.templates');
+} catch (e) {
+  module = angular.module('myCio.templates', []);
+}
+module.run(['$templateCache', function($templateCache) {
+  $templateCache.put('/templates/utils/navigator.html',
+    '<div class="collapse navbar-collapse">\n' +
+    '    <ul class="nav navbar-nav">\n' +
+    '        <li class="dropdown">\n' +
+    '            <a href class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">\n' +
+    '                Portfolios <span class="caret"></span>\n' +
+    '            </a>\n' +
+    '            <ul class="dropdown-menu">\n' +
+    '                <li data-ng-repeat="port in clientPortfolios">\n' +
+    '                    <a ui-sref="portfolio.overview()">{{port.portfolioName}}</a>\n' +
+    '                </li>\n' +
+    '            </ul>\n' +
+    '        </li>\n' +
+    '\n' +
+    '        <li ui-sref-active="active"><a ui-sref="funds.selector">Funds</a></li>\n' +
+    '    </ul>\n' +
+    '\n' +
+    '    <div class="navbar-form navbar-right" data-ng-show="isFundState">\n' +
+    '        <input type="text" class="form-control typeahead" placeholder="Type a Scheme Name"\n' +
+    '               data-ng-model="selectedScheme"\n' +
+    '               uib-typeahead="fund as fund.schemeName for fund in fundList | filter:{schemeName:$viewValue} | limitTo:10"\n' +
+    '               typeahead-show-hint="true"\n' +
+    '               typeahead-min-length="1"\n' +
+    '               typeahead-editable="false"\n' +
+    '               typeahead-on-select="goToFund()">\n' +
+    '    </div>\n' +
+    '    </div>\n' +
+    '</div>\n' +
+    '');
+}]);
+})();
+
+},{}],14:[function(require,module,exports){
 /**
  * @license AngularJS v1.5.6
  * (c) 2010-2016 Google, Inc. http://angularjs.org
@@ -4665,11 +5106,11 @@ angular.module('ngAnimate', [])
 
 })(window, window.angular);
 
-},{}],10:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 require('./angular-animate');
 module.exports = 'ngAnimate';
 
-},{"./angular-animate":9}],11:[function(require,module,exports){
+},{"./angular-animate":14}],16:[function(require,module,exports){
 /*
  * angular-ui-bootstrap
  * http://angular-ui.github.io/bootstrap/
@@ -12017,12 +12458,12 @@ angular.module('ui.bootstrap.datepickerPopup').run(function() {!angular.$$csp().
 angular.module('ui.bootstrap.tooltip').run(function() {!angular.$$csp().noInlineStyle && !angular.$$uibTooltipCss && angular.element(document).find('head').prepend('<style type="text/css">[uib-tooltip-popup].tooltip.top-left > .tooltip-arrow,[uib-tooltip-popup].tooltip.top-right > .tooltip-arrow,[uib-tooltip-popup].tooltip.bottom-left > .tooltip-arrow,[uib-tooltip-popup].tooltip.bottom-right > .tooltip-arrow,[uib-tooltip-popup].tooltip.left-top > .tooltip-arrow,[uib-tooltip-popup].tooltip.left-bottom > .tooltip-arrow,[uib-tooltip-popup].tooltip.right-top > .tooltip-arrow,[uib-tooltip-popup].tooltip.right-bottom > .tooltip-arrow,[uib-tooltip-html-popup].tooltip.top-left > .tooltip-arrow,[uib-tooltip-html-popup].tooltip.top-right > .tooltip-arrow,[uib-tooltip-html-popup].tooltip.bottom-left > .tooltip-arrow,[uib-tooltip-html-popup].tooltip.bottom-right > .tooltip-arrow,[uib-tooltip-html-popup].tooltip.left-top > .tooltip-arrow,[uib-tooltip-html-popup].tooltip.left-bottom > .tooltip-arrow,[uib-tooltip-html-popup].tooltip.right-top > .tooltip-arrow,[uib-tooltip-html-popup].tooltip.right-bottom > .tooltip-arrow,[uib-tooltip-template-popup].tooltip.top-left > .tooltip-arrow,[uib-tooltip-template-popup].tooltip.top-right > .tooltip-arrow,[uib-tooltip-template-popup].tooltip.bottom-left > .tooltip-arrow,[uib-tooltip-template-popup].tooltip.bottom-right > .tooltip-arrow,[uib-tooltip-template-popup].tooltip.left-top > .tooltip-arrow,[uib-tooltip-template-popup].tooltip.left-bottom > .tooltip-arrow,[uib-tooltip-template-popup].tooltip.right-top > .tooltip-arrow,[uib-tooltip-template-popup].tooltip.right-bottom > .tooltip-arrow,[uib-popover-popup].popover.top-left > .arrow,[uib-popover-popup].popover.top-right > .arrow,[uib-popover-popup].popover.bottom-left > .arrow,[uib-popover-popup].popover.bottom-right > .arrow,[uib-popover-popup].popover.left-top > .arrow,[uib-popover-popup].popover.left-bottom > .arrow,[uib-popover-popup].popover.right-top > .arrow,[uib-popover-popup].popover.right-bottom > .arrow,[uib-popover-html-popup].popover.top-left > .arrow,[uib-popover-html-popup].popover.top-right > .arrow,[uib-popover-html-popup].popover.bottom-left > .arrow,[uib-popover-html-popup].popover.bottom-right > .arrow,[uib-popover-html-popup].popover.left-top > .arrow,[uib-popover-html-popup].popover.left-bottom > .arrow,[uib-popover-html-popup].popover.right-top > .arrow,[uib-popover-html-popup].popover.right-bottom > .arrow,[uib-popover-template-popup].popover.top-left > .arrow,[uib-popover-template-popup].popover.top-right > .arrow,[uib-popover-template-popup].popover.bottom-left > .arrow,[uib-popover-template-popup].popover.bottom-right > .arrow,[uib-popover-template-popup].popover.left-top > .arrow,[uib-popover-template-popup].popover.left-bottom > .arrow,[uib-popover-template-popup].popover.right-top > .arrow,[uib-popover-template-popup].popover.right-bottom > .arrow{top:auto;bottom:auto;left:auto;right:auto;margin:0;}[uib-popover-popup].popover,[uib-popover-html-popup].popover,[uib-popover-template-popup].popover{display:block !important;}</style>'); angular.$$uibTooltipCss = true; });
 angular.module('ui.bootstrap.timepicker').run(function() {!angular.$$csp().noInlineStyle && !angular.$$uibTimepickerCss && angular.element(document).find('head').prepend('<style type="text/css">.uib-time input{width:50px;}</style>'); angular.$$uibTimepickerCss = true; });
 angular.module('ui.bootstrap.typeahead').run(function() {!angular.$$csp().noInlineStyle && !angular.$$uibTypeaheadCss && angular.element(document).find('head').prepend('<style type="text/css">[uib-typeahead-popup].dropdown-menu{display:block;}</style>'); angular.$$uibTypeaheadCss = true; });
-},{}],12:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 require('./dist/ui-bootstrap-tpls');
 
 module.exports = 'ui.bootstrap';
 
-},{"./dist/ui-bootstrap-tpls":11}],13:[function(require,module,exports){
+},{"./dist/ui-bootstrap-tpls":16}],18:[function(require,module,exports){
 /**
  * State-based routing for AngularJS
  * @version v0.3.0
@@ -16598,7 +17039,7 @@ angular.module('ui.router.state')
   .filter('isState', $IsStateFilter)
   .filter('includedByState', $IncludedByStateFilter);
 })(window, window.angular);
-},{}],14:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 /**
  * @license AngularJS v1.5.6
  * (c) 2010-2016 Google, Inc. http://angularjs.org
@@ -47622,11 +48063,11 @@ $provide.value("$locale", {
 })(window);
 
 !window.angular.$$csp().noInlineStyle && window.angular.element(document.head).prepend('<style type="text/css">@charset "UTF-8";[ng\\:cloak],[ng-cloak],[data-ng-cloak],[x-ng-cloak],.ng-cloak,.x-ng-cloak,.ng-hide:not(.ng-hide-animate){display:none !important;}ng\\:form{display:block;}.ng-animate-shim{visibility:hidden;}.ng-anchor{position:absolute;}</style>');
-},{}],15:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 require('./angular');
 module.exports = angular;
 
-},{"./angular":14}],16:[function(require,module,exports){
+},{"./angular":19}],21:[function(require,module,exports){
 /*
  Highstock JS v4.2.5 (2016-05-06)
 
@@ -48062,7 +48503,7 @@ if(this.modifyValue)b=[this.modifyValue(this.dataMin),this.modifyValue(this.data
 this.xAxis)!this.clipBox&&this.animate?(this.clipBox=z(this.chart.clipBox),this.clipBox.width=this.xAxis.len,this.clipBox.height=this.yAxis.len):this.chart[this.sharedClipKey]&&(Sa(this.chart[this.sharedClipKey]),this.chart[this.sharedClipKey].attr({width:this.xAxis.len,height:this.yAxis.len}));a.call(this)});A(B,{Color:va,Point:Ha,Tick:bb,Renderer:Xa,SVGElement:Z,SVGRenderer:xa,arrayMin:Ma,arrayMax:Da,charts:$,correctFloat:ka,dateFormat:na,error:ga,format:La,pathAnim:void 0,getOptions:function(){return R},
 hasBidiBug:Zb,isTouchDevice:jb,setOptions:function(a){R=z(!0,R,a);Ob();return R},addEvent:E,removeEvent:T,createElement:fa,discardElement:Ua,css:N,each:o,map:ta,merge:z,splat:ua,stableSort:nb,extendClass:ma,pInt:K,svg:ja,canvas:qa,vml:!ja&&!qa,product:"Highstock",version:"4.2.5"});return B});
 
-},{}],17:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 /*!
  * jQuery JavaScript Library v2.2.4
  * http://jquery.com/
@@ -57878,7 +58319,7 @@ if ( !noGlobal ) {
 return jQuery;
 }));
 
-},{}],18:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 (function (global){
 /**
  * @license
@@ -74286,7 +74727,7 @@ return jQuery;
 }.call(this));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],19:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 //! moment.js
 //! version : 2.13.0
 //! authors : Tim Wood, Iskren Chernev, Moment.js contributors
