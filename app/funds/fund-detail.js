@@ -22,15 +22,21 @@ module.exports = ['fundService','$stateParams',
                     });
                 });
 
-                // nav chart
-                var navChartOptions = {
-                    chart: {
-                        renderTo: 'nav-chart-container'
-                    },
+                var defaultChartOptions = {
                     rangeSelector: {
                         selected: 1
+                    },
+                    yAxis: {
+                        plotLines: [{
+                            color: 'black',
+                            width: 2,
+                            value: 0
+                        }]
                     }
                 };
+                // nav chart
+                var navChartOptions = angular.copy(defaultChartOptions);
+                _.set(navChartOptions,'chart.renderTo','nav-chart-container');
                 var navChart = new Highcharts.StockChart(navChartOptions);
 
                 fundService.getFundNAV(schemeCode).then(function(res) {
@@ -45,14 +51,8 @@ module.exports = ['fundService','$stateParams',
                 });
 
                 // returns chart
-                var returnChartOptions = {
-                    chart: {
-                        renderTo: 'return-chart-container'
-                    },
-                    rangeSelector: {
-                        selected: 1
-                    }
-                };
+                var returnChartOptions = angular.copy(defaultChartOptions);
+                _.set(returnChartOptions,'chart.renderTo','return-chart-container');
                 var returnChart = new Highcharts.StockChart(returnChartOptions);
 
                 $scope.periods = {
