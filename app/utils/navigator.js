@@ -5,8 +5,8 @@
 
 var _ = require('lodash');
 
-module.exports = ['portfolioService','fundService','$stateParams','$state',
-    function(portfolioService,fundService,$stateParams,$state) {
+module.exports = ['clientService','fundService','$stateParams','$state',
+    function(clientService,fundService,$stateParams,$state) {
         return {
             restrict: 'E',
             scope: {},
@@ -15,17 +15,19 @@ module.exports = ['portfolioService','fundService','$stateParams','$state',
 
                 $scope.$on('$stateChangeSuccess',function(event, toState, toParams, fromState, fromParams) {
                     $scope.isFundState = _.includes(toState.name,'fund');
-                    if(_.includes(toState.name,'fund')) {
+                    if($scope.isFundState) {
                         fundService.getAllFunds().then(function(res) {
                             $scope.fundList = res;
                         })
                     }
 
-                    if(_.has(toParams,'clientName')) {
-                        var clientName = toParams.clientName;
-                        portfolioService.getClientPortfolios(clientName).then(function(res) {
+                    $scope.isLoggedIn = clientService.isLoggedIn();
+                    if($scope.isLoggedIn) {
+                        clientService.getClientPortfolios(clientService.getClientName()).then(function(res) {
                             $scope.clientPortfolios = res;
                         });
+                    } else {
+                        $state.go('home');
                     }
                 });
 

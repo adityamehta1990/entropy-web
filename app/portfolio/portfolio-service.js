@@ -5,22 +5,9 @@
 
 var _ = require('lodash');
 
-// A RESTful factory for retrieving fund data
 module.exports = ['$http','dataService',
     function($http,dataService) {
         var factory = {};
-
-        factory.getClientPortfolios = function(clientName) {
-            return dataService.getData('portfolio-data/client/' + clientName).then(function(res){
-                return res;
-            },function() {
-                return [];
-            });
-        };
-
-        factory.createNewPortfolio = function(portfolio) {
-            return dataService.postData(_.join(['portfolio-data','new'],'/'),portfolio);
-        };
 
         factory.getPortfolioMetaData = function(portfolioId) {
             return dataService.getData(_.join(['portfolio-data',portfolioId,'metadata'],'/'));

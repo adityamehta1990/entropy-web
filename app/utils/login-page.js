@@ -5,25 +5,26 @@
 
 var _ = require('lodash');
 
-module.exports = ['portfolioService','$state',
-    function(portfolioService,$state) {
+module.exports = ['clientService','$state',
+    function(clientService,$state) {
         return {
             restrict: 'E',
             scope: {},
             templateUrl: '/templates/utils/login-page.html',
             link: function ($scope) {
-                // we can add encryption and authentication here
-                $scope.clientName = null;
+                // we can add encryption, authentication and login timeouts here
                 $scope.loginMode = true;
-                $scope.loggedIn = false;
+                $scope.loggedIn = clientService.isLoggedIn();
+                $scope.clientName = clientService.getClientName();
 
                 $scope.loginToClient = function () {
                     // check if we get any client portfolios after which go to client page
                     // this is a proxy for "authentication" right now
-                    portfolioService.getClientPortfolios($scope.clientName).then(function (portfolioList) {
+                    clientService.getClientPortfolios($scope.clientName,true).then(function (portfolioList) {
                         if (portfolioList) {
                             $scope.invalidClient = false;
-                            $scope.loggedIn = true;
+                            clientService.setLoggedInClient($scope.clientName);
+                            // change this to client overview once ready
                             $state.go('portfolio.overview', {
                                 portfolioId: portfolioList[0].portfolioId
                             });
@@ -33,6 +34,11 @@ module.exports = ['portfolioService','$state',
                     }, function() {
                         $scope.invalidClient = true;
                     })
+                };
+
+                // if already logged in, client name will be set, so redirect
+                if(clientService.isLoggedIn()) {
+                    $scope.loginToClient($scope.clientName);
                 }
             }
         }

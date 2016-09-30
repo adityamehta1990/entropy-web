@@ -6,6 +6,7 @@ var _ = require('lodash');
 require('angular-animate');
 require('angular-ui-router');
 require('angular-ui-bootstrap');
+require('./portfolio/client');
 require('./portfolio/portfolio');
 require('./funds/funds');
 require('./utils/utils');
@@ -17,6 +18,7 @@ var app = angular.module('myCio', [
     'ui.router',
     'ui.bootstrap',
     'ngAnimate',
+    'myCio.client',
     'myCio.portfolio',
     'myCio.funds',
     'myCio.utils',
