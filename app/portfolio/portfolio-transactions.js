@@ -6,8 +6,8 @@
 var _ = require('lodash');
 var moment = require('moment');
 
-module.exports = ['portfolioService','$stateParams',
-    function(portfolioService,$stateParams) {
+module.exports = ['portfolioService','fundService','$stateParams',
+    function(portfolioService,fundService,$stateParams) {
         return {
             restrict: 'E',
             scope: {},
@@ -16,6 +16,22 @@ module.exports = ['portfolioService','$stateParams',
                 var portfolioId = $stateParams.portfolioId;
                 $scope.showNewTransactionRow = false;
                 $scope.newTxn = {};
+                $scope.openDatePicker = false;
+
+                $scope.getFundsForDate = function(navDate) {
+                    $scope.newTxn.date = moment(navDate).format();
+                    $scope.fundList = [];
+                    fundService.getAllFunds(navDate).then(function (res) {
+                        $scope.fundList = res;
+                    });
+                };
+
+                $scope.getSelectedSchemeNAV = function() {
+                    fundService.getFundNAV($scope.selectedScheme.schemeCode).then(function(navData) {
+                        var idx = _.indexOf(navData.dates,$scope.newTxn.date);
+                        $scope.newTxn.price = navData.values[idx];
+                    })
+                };
 
                 $scope.reloadTransactionList = function() {
                     portfolioService.getPortfolioTransactions(portfolioId).then(function (res) {
@@ -25,18 +41,24 @@ module.exports = ['portfolioService','$stateParams',
 
                 $scope.clearNewTransaction = function() {
                     $scope.showNewTransactionRow = false;
-                    $scope.newTxn = {}
+                    $scope.newTxn = {};
+                    $scope.selectedScheme = null;
                 };
 
                 $scope.addTransaction = function() {
-                    portfolioService.addNewTransactionToPortfolio(portfolioId,$scope.newTxn);
-                    $scope.newTxn = {};
-                    $scope.reloadTransactionList();
+                    $scope.newTxn.schemeCode = $scope.selectedScheme.schemeCode;
+                    $scope.newTxn.schemeName = $scope.selectedScheme.schemeName;
+                    $scope.newTxn.quantity = $scope.newTxn.cashflow / $scope.newTxn.price;
+                    portfolioService.addNewTransactionToPortfolio(portfolioId,$scope.newTxn).then(function() {
+                        $scope.clearNewTransaction();
+                        $scope.reloadTransactionList();
+                    });
                 };
 
                 $scope.deleteTransaction = function(txnId) {
-                    portfolioService.deleteTransactionFromPortfolio(portfolioId,txnId);
-                    $scope.reloadTransactionList();
+                    portfolioService.deleteTransactionFromPortfolio(portfolioId,txnId).then(function() {
+                        $scope.reloadTransactionList();
+                    });
                 };
 
                 // initialize transactions

@@ -3,7 +3,7 @@
         <table class="table table-condensed table-hover">
             <thead>
             <tr>
-                <th>Date</th>
+                <th width="10%">Date</th>
                 <th>Fund</th>
                 <th>Cash Flow</th>
                 <th>Quantity</th>
@@ -17,10 +17,27 @@
             </thead>
             <tbody>
             <tr data-ng-show="showNewTransactionRow">
-                <td><input type="text" class="form-control" data-ng-model="newTxn.date"></td>
-                <td><input type="text" class="form-control" data-ng-model="newTxn.schemeName"></td>
-                <td><input type="number" class="form-control" data-ng-model="newTxn.cashflow"></td>
-                <td>{{newTxn.quantity}}</td>
+                <td><input type="text" class="form-control" placeholder="YYYY-MM-DD" uib-datepicker-popup
+                           data-ng-model="navDate"
+                           data-ng-click="openDatePicker = true"
+                           data-ng-change="getFundsForDate(navDate)"
+                           is-open="openDatePicker"
+                ></td>
+                <td>
+                    <span data-ng-show="!navDate">Choose Date</span>
+                    <span data-ng-show="navDate && !fundList.length" class="fa fa-spin fa-spinner"></span>
+                    <span data-ng-show="navDate && fundList.length">
+                    <input type="text" class="form-control typeahead" placeholder="Type a Scheme Name"
+                           data-ng-model="selectedScheme"
+                           uib-typeahead="fund as fund.schemeName for fund in fundList | filter:{schemeName:$viewValue} | limitTo:10"
+                           typeahead-show-hint="true"
+                           typeahead-on-select="getSelectedSchemeNAV()"
+                           typeahead-min-length="1"
+                           typeahead-editable="false"></span>
+                </td>
+                <td><input type="number" class="form-control" placeholder="in Rupees"
+                           data-ng-model="newTxn.cashflow" data-ng-disabled="!newTxn.price"></td>
+                <td><span data-ng-show="newTxn.price && newTxn.cashflow">{{newTxn.cashflow / newTxn.price | number:3 }}</span></td>
                 <td>{{newTxn.price}}</td>
                 <td>
                     <div class="btn-group btn-group-sm">
@@ -37,8 +54,8 @@
                 <td>{{txn.date | date:'mediumDate'}}</td>
                 <td>{{txn.schemeName}}</td>
                 <td>{{txn.cashflow}}</td>
-                <td>{{txn.quantity}}</td>
-                <td>{{txn.price}}</td>
+                <td>{{txn.quantity | number:3 }}</td>
+                <td>{{txn.cashflow / txn.quantity | number:3}}</td>
                 <td>
                     <div class="btn-group btn-group-sm" style="margin: 0px">
                     <button class="btn" data-ng-click="editTransaction(txn.transactionId)">

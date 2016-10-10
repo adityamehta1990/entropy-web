@@ -4,16 +4,19 @@
 'use strict';
 
 var _ = require('lodash');
+var moment = require('moment');
 
 // A RESTful factory for retrieving fund data
 module.exports = ['$http','dataService',
     function($http,dataService) {
         var factory = {};
 
-        var funds = dataService.getData('fund-data/schemes');
-
-        factory.getAllFunds = function () {
-            return funds;
+        factory.getAllFunds = function (navDate) {
+            if(navDate) {
+                return dataService.getData('fund-data/schemes/' + moment(navDate).format('YYYY-MM-DD'));
+            } else {
+                return dataService.getData('fund-data/schemes');
+            }
         };
 
         factory.getFundData = function(schemeCode) {
