@@ -7,8 +7,8 @@ var _ = require('lodash');
 var moment = require('moment');
 var Highcharts = require('highcharts/highstock');
 
-module.exports = ['fundService','$stateParams',
-    function(fundService,$stateParams) {
+module.exports = ['fundService','$stateParams','dataService',
+    function(fundService,$stateParams,dataService) {
         return {
             restrict: 'E',
             scope: {},
@@ -42,7 +42,7 @@ module.exports = ['fundService','$stateParams',
                 fundService.getFundNAV(schemeCode).then(function(res) {
                     navChart.addSeries({
                         name: 'Fund NAV',
-                        data: res,
+                        data: dataService.curveDataForChart(res),
                         tooltip: {
                             valueDecimals: 2,
                             xDateFormat: '%e %b %Y'
@@ -70,7 +70,7 @@ module.exports = ['fundService','$stateParams',
                     fundService.getFundReturn(schemeCode,$scope.chosenPeriod).then(function (res) {
                         returnChart.addSeries({
                             name: 'Fund Returns',
-                            data: _.map(res,function(val) {
+                            data: _.map(dataService.curveDataForChart(res),function(val) {
                                 return [val[0], val[1]*100];
                             }),
                             tooltip: {

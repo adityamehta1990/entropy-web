@@ -12,19 +12,17 @@ module.exports = ['$http',
         var factory = {};
         var path = 'http://' + window.location.hostname + ':5000/';
 
-        factory.getData = function(url,isCurve) {
-            return $http.get(path + url).then( function(res) {
-                var data = res.data.data;
+        factory.curveDataForChart = function(data) {
+            var curveData = [];
+            _.map(data.dates, function (val,idx) {
+                curveData.push([moment(val).valueOf(), parseFloat(data.values[idx])]);
+            });
+            return curveData;
+        };
 
-                if(isCurve) {
-                    var curveData = [];
-                    _.map(data.dates, function (val,idx) {
-                        curveData.push([moment.utc(val).valueOf(), parseFloat(data.values[idx])]);
-                    });
-                    return curveData;
-                } else {
-                    return data;
-                }
+        factory.getData = function(url) {
+            return $http.get(path + url).then( function(res) {
+                return res.data.data;
             });
         };
 
