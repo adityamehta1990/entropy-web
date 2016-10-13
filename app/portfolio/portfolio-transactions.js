@@ -48,6 +48,7 @@ module.exports = ['portfolioService','fundService','$stateParams',
                 $scope.addTransaction = function() {
                     $scope.newTxn.schemeCode = $scope.selectedScheme.schemeCode;
                     $scope.newTxn.schemeName = $scope.selectedScheme.schemeName;
+                    $scope.newTxn.date = moment($scope.newTxn.date).format('YYYY-MM-DD');
                     $scope.newTxn.quantity = $scope.newTxn.cashflow / $scope.newTxn.price;
                     portfolioService.addNewTransactionToPortfolio(portfolioId,$scope.newTxn).then(function() {
                         $scope.clearNewTransaction();
