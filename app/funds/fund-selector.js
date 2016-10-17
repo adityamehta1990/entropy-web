@@ -17,7 +17,7 @@ module.exports = ['$state',
                 $scope.filteredList = $scope.fundList;
                 $scope.schemeTypes = _.uniq(_.map($scope.fundList, 'schemeType'));
                 $scope.selectedSchemeType = '';
-                $scope.selectedFundName = '';
+                $scope.selectedManagerName = '';
 
                 $scope.filterFundList = function () {
                     if ($scope.selectedSchemeType === '') {
@@ -25,16 +25,16 @@ module.exports = ['$state',
                     } else {
                         $scope.filteredList = _.filter($scope.fundList, {schemeType: $scope.selectedSchemeType});
                     }
-                    $scope.fundNames = _.uniq(_.map($scope.filteredList, 'fundName'));
-                    if(!_.includes($scope.fundNames, $scope.selectedFundName)) {
+                    $scope.managerNames = _.uniq(_.map($scope.filteredList, 'managerName'));
+                    if(!_.includes($scope.managerNames, $scope.selectedManagerName)) {
                         // if the already selected fund is not under selectedSchemeType, reset it to any
-                        $scope.selectedFundName = '';
+                        $scope.selectedManagerName = '';
                     }
-                    if($scope.selectedFundName) {
-                        // otherwise filter by selected fundName
+                    if($scope.selectedManagerName) {
+                        // otherwise filter by selected managerName
                         $scope.filteredList = _.filter($scope.filteredList, {
                             schemeType: $scope.selectedSchemeType,
-                            fundName: $scope.selectedFundName
+                            managerName: $scope.selectedManagerName
                         })
                     }
                 };

@@ -8,10 +8,10 @@
         </select>
         </div>
         <div class="input-group">
-        <label class="input-group-addon">Fund House: </label>
-        <select class="form-control" data-ng-model="selectedFundName" data-ng-change="filterFundList()">
+        <label class="input-group-addon">Manager Name: </label>
+        <select class="form-control" data-ng-model="selectedManagerName" data-ng-change="filterFundList()">
             <option value="">Any</option>
-            <option data-ng-repeat="fn in fundNames" value="{{fn}}">{{fn}}</option>
+            <option data-ng-repeat="fn in managerNames" value="{{fn}}">{{fn}}</option>
         </select>
         </div>
         <div class="input-group">
