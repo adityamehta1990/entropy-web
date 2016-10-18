@@ -14,12 +14,14 @@ module.exports = ['clientService','$state',
             link: function ($scope) {
                 // we can add encryption, authentication and login timeouts here
                 $scope.loginMode = true;
+                $scope.loggingIn = false;
                 $scope.loggedIn = clientService.isLoggedIn();
                 $scope.clientName = clientService.getClientName();
 
                 $scope.loginToClient = function () {
                     // check if we get any client portfolios after which go to client page
                     // this is a proxy for "authentication" right now
+                    $scope.loggingIn = true;
                     clientService.getClientPortfolios($scope.clientName,true).then(function (portfolioList) {
                         if (portfolioList) {
                             $scope.invalidClient = false;
