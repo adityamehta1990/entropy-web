@@ -17,23 +17,13 @@ app.config(['$stateProvider','$urlRouterProvider',
             .state('funds', {
                 abstract: true,
                 url: '/funds',
-                template: '<div ui-view></div>',
-                resolve: {
-                    fundList: ['fundService',
-                        function(fundService){
-                            return fundService.getAllFunds();
-                        }]
-                },
-                controller: ['$scope','fundList',
-                    function($scope,fundList) {
-                        $scope.fundList = fundList;
-                    }]
+                template: '<div ui-view></div>'
             })
             // since this is a child state, it inherits scope from the above abstract state
             // which we can directly use inside the directive!
             .state('funds.selector', {
                 url: '',
-                template: '<fund-selector fund-list="fundList"></fund-selector>'
+                template: '<fund-selector></fund-selector>'
             })
             .state('funds.detail', {
                 url: '/:schemeCode',

@@ -10,13 +10,16 @@ var moment = require('moment');
 module.exports = ['$http','dataService',
     function($http,dataService) {
         var factory = {};
+        var latestFundListPromise = null;
 
         factory.getAllFunds = function (navDate) {
             if(navDate) {
                 return dataService.getData('fund-data/schemes/' + moment(navDate).format('YYYY-MM-DD'));
-            } else {
-                return dataService.getData('fund-data/schemes');
             }
+            if(!latestFundListPromise) {
+                latestFundListPromise = dataService.getData('fund-data/schemes');
+            }
+            return latestFundListPromise;
         };
 
         factory.getFundData = function(schemeCode) {

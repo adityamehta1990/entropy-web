@@ -5,25 +5,20 @@
 
 var _ = require('lodash');
 
-module.exports = ['$state',
-    function($state) {
+module.exports = ['$state','fundService',
+    function($state,fundService) {
         return {
             restrict: 'E',
-            scope: {
-                fundList: '='
-            },
+            scope: {},
             templateUrl: '/templates/funds/fund-selector.html',
             link: function ($scope) {
-                $scope.filteredList = $scope.fundList;
-                $scope.schemeTypes = _.uniq(_.map($scope.fundList, 'schemeType'));
-                $scope.selectedSchemeType = '';
-                $scope.selectedManagerName = '';
+                var fundList = [];
 
                 $scope.filterFundList = function () {
                     if ($scope.selectedSchemeType === '') {
-                        $scope.filteredList = $scope.fundList;
+                        $scope.filteredList = fundList;
                     } else {
-                        $scope.filteredList = _.filter($scope.fundList, {schemeType: $scope.selectedSchemeType});
+                        $scope.filteredList = _.filter(fundList, {schemeType: $scope.selectedSchemeType});
                     }
                     $scope.managerNames = _.uniq(_.map($scope.filteredList, 'managerName'));
                     if(!_.includes($scope.managerNames, $scope.selectedManagerName)) {
@@ -44,7 +39,15 @@ module.exports = ['$state',
                 };
 
                 // initialize the filter
-                $scope.filterFundList();
+                fundService.getAllFunds().then(function(res) {
+                    fundList = res;
+                    $scope.filteredList = fundList;
+                    $scope.schemeTypes = _.uniq(_.map(fundList, 'schemeType'));
+                    $scope.selectedSchemeType = '';
+                    $scope.selectedManagerName = '';
+
+                    $scope.filterFundList();
+                });
             }
         }
     }
