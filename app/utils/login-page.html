@@ -21,7 +21,9 @@
                 <label>Password</label>
                 <input type="password" class="form-control" placeholder="Password">
             </div>
-            <button type="submit" class="btn btn-default" data-ng-disabled="loggingIn">Submit</button>
+            <button type="submit" class="btn btn-default" data-ng-disabled="loggingIn">
+                Submit<span data-ng-show="loggingIn">ting <i class="fa fa-spin fa-spinner"></i></span>
+            </button>
         </form>
 
         <div class="alert alert-danger" role="alert" data-ng-show="invalidClient">

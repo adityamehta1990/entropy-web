@@ -8,6 +8,7 @@ var angular = require('angular');
 var app = angular.module('myCio.portfolio',['ui.router']);
 app.factory('portfolioService', require('./portfolio-service'));
 app.directive('portfolioTransactions', require('./portfolio-transactions'));
+app.directive('returnAnalysis', require('./return-analysis'));
 
 // setup routes within the fund state
 app.config(['$stateProvider','$urlRouterProvider',
@@ -33,7 +34,7 @@ app.config(['$stateProvider','$urlRouterProvider',
                 })
                 .state('portfolio.analysis', {
                     url: '/analysis',
-                    template: 'Coming soon...'
+                    template: '<return-analysis></return-analysis>'
                 });
         }
     ]
