@@ -17,12 +17,11 @@ module.exports = ['portfolioService','$stateParams','dataService',
             link: function ($scope) {
                 // return and risk analysis
                 var portfolioId = $stateParams.portfolioId;
-                // todo: return stats
-                //portfolioService.getPortfolioReturnStats(portfolioId).then(function(res) {
-                //    $scope.returnStats = _.mapKeys(res,function(val,key) {
-                //        return _.startCase(key);
-                //    });
-                //});
+                portfolioService.getPortfolioReturnStats(portfolioId).then(function(res) {
+                    $scope.returnStats = _.mapKeys(res,function(val,key) {
+                        return _.startCase(key);
+                    });
+                });
 
                 var defaultChartOptions = {
                     rangeSelector: {
@@ -58,11 +57,11 @@ module.exports = ['portfolioService','$stateParams','dataService',
                 var returnChart = new Highcharts.StockChart(returnChartOptions);
 
                 $scope.periods = {
-                    'Daily': '1d',
-                    'Monthly': '1m',
-                    'Yearly': '1y'
+                    'Daily': '1D',
+                    'Monthly': '1M',
+                    'Yearly': '1Y'
                 };
-                $scope.chosenPeriod = '1m';
+                $scope.chosenPeriod = '1M';
                 $scope.changePeriod = function() {
                     while(returnChart.series.length) {
                         returnChart.series[0].remove(false);

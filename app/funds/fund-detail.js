@@ -56,11 +56,11 @@ module.exports = ['fundService','$stateParams','dataService',
                 var returnChart = new Highcharts.StockChart(returnChartOptions);
 
                 $scope.periods = {
-                    'Daily': '1d',
-                    'Monthly': '1m',
-                    'Yearly': '1y'
+                    'Daily': '1D',
+                    'Monthly': '1M',
+                    'Yearly': '1Y'
                 };
-                $scope.chosenPeriod = '1m';
+                $scope.chosenPeriod = '1M';
                 $scope.changePeriod = function() {
                     while(returnChart.series.length) {
                         returnChart.series[0].remove(false);

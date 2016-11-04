@@ -30,11 +30,15 @@ module.exports = ['$http','dataService',
         };
 
         factory.getPortfolioNAV = function(portfolioId) {
-            return dataService.getData(_.join(['portfolio-data',portfolioId,'nav'],'/'), true);
+            return dataService.getData(_.join(['portfolio-data',portfolioId,'nav'],'/'));
         };
 
         factory.getPortfolioReturn = function(portfolioId,period) {
-            return dataService.getData(_.join(['portfolio-data',portfolioId,'return',period],'/'),true);
+            return dataService.getData(_.join(['portfolio-data',portfolioId,'return',period],'/'));
+        };
+
+        factory.getPortfolioReturnStats = function(portfolioId) {
+            return dataService.getData(_.join(['portfolio-data',portfolioId,'return-stats'],'/'));
         };
 
         return factory;
