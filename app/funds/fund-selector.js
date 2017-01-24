@@ -15,36 +15,36 @@ module.exports = ['$state','fundService',
                 var fundList = [];
 
                 $scope.filterFundList = function () {
-                    if ($scope.selectedSchemeType === '') {
+                    if ($scope.selectedFundType === '') {
                         $scope.filteredList = fundList;
                     } else {
-                        $scope.filteredList = _.filter(fundList, {schemeType: $scope.selectedSchemeType});
+                        $scope.filteredList = _.filter(fundList, {fundType: $scope.selectedFundType});
                     }
-                    $scope.managerNames = _.uniq(_.map($scope.filteredList, 'managerName'));
-                    if(!_.includes($scope.managerNames, $scope.selectedManagerName)) {
-                        // if the already selected fund is not under selectedSchemeType, reset it to any
-                        $scope.selectedManagerName = '';
+                    $scope.fundHouses = _.uniq(_.map($scope.filteredList, 'fundHouse'));
+                    if(!_.includes($scope.fundHouses, $scope.selectedFundHouse)) {
+                        // if the already selected fund is not under selectedFundType, reset it to any
+                        $scope.selectedFundHouse = '';
                     }
-                    if($scope.selectedManagerName) {
-                        // otherwise filter by selected managerName
+                    if($scope.selectedFundHouse) {
+                        // otherwise filter by selected fundHouse
                         $scope.filteredList = _.filter($scope.filteredList, {
-                            schemeType: $scope.selectedSchemeType,
-                            managerName: $scope.selectedManagerName
+                            fundType: $scope.selectedFundType,
+                            fundHouse: $scope.selectedFundHouse
                         })
                     }
                 };
 
                 $scope.goToFund = function() {
-                    $state.go('funds.detail',{schemeCode: $scope.selectedScheme.schemeCode});
+                    $state.go('funds.detail',{_id: $scope.selectedFund._id});
                 };
 
                 // initialize the filter
                 fundService.getAllFunds().then(function(res) {
                     fundList = res;
                     $scope.filteredList = fundList;
-                    $scope.schemeTypes = _.uniq(_.map(fundList, 'schemeType'));
-                    $scope.selectedSchemeType = '';
-                    $scope.selectedManagerName = '';
+                    $scope.fundTypes = _.uniq(_.map(fundList, 'fundType'));
+                    $scope.selectedFundType = '';
+                    $scope.selectedFundHouse = '';
 
                     $scope.filterFundList();
                 });

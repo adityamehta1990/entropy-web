@@ -24,6 +24,7 @@ module.exports = ['portfolioService','$stateParams','dataService',
                 });
 
                 var defaultChartOptions = {
+                    colors : [ 'blue', 'red' ],
                     rangeSelector: {
                         selected: 1
                     },

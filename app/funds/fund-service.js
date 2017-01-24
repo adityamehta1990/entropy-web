@@ -14,24 +14,24 @@ module.exports = ['$http','dataService',
 
         factory.getAllFunds = function (navDate) {
             if(navDate) {
-                return dataService.getData('fund-data/schemes/' + moment(navDate).format('YYYY-MM-DD'));
+                return dataService.getData('fund-data/funds/' + moment(navDate).format('YYYY-MM-DD'));
             }
             if(!latestFundListPromise) {
-                latestFundListPromise = dataService.getData('fund-data/schemes');
+                latestFundListPromise = dataService.getData('fund-data/funds');
             }
             return latestFundListPromise;
         };
 
-        factory.getFundData = function(schemeCode) {
-            return dataService.getData('fund-data/scheme/' + schemeCode);
+        factory.getFundData = function(_id) {
+            return dataService.getData('fund-data/fund/' + _id);
         };
 
-        factory.getFundNAV = function(schemeCode) {
-            return dataService.getData('fund-data/nav/' + schemeCode, true);
+        factory.getFundNAV = function(_id) {
+            return dataService.getData('fund-data/nav/' + _id, true);
         };
 
-        factory.getFundReturn = function(schemeCode,period) {
-            return dataService.getData(_.join(['fund-data/return',schemeCode,period],'/'),true);
+        factory.getFundReturn = function(_id,period) {
+            return dataService.getData(_.join(['fund-data/return',_id,period],'/'),true);
         };
 
         return factory;

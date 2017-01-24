@@ -1,24 +1,24 @@
 <div>
     <div class="form-group">
         <div class="input-group">
-        <label class="input-group-addon">Scheme Type: </label>
-        <select class="form-control" data-ng-model="selectedSchemeType" data-ng-change="filterFundList()">
+        <label class="input-group-addon">Fund Type: </label>
+        <select class="form-control" data-ng-model="selectedFundType" data-ng-change="filterFundList()">
             <option value="">Any</option>
-            <option data-ng-repeat="st in schemeTypes" value="{{st}}">{{st}}</option>
+            <option data-ng-repeat="st in fundTypes" value="{{st}}">{{st}}</option>
         </select>
         </div>
         <div class="input-group">
-        <label class="input-group-addon">Manager Name: </label>
-        <select class="form-control" data-ng-model="selectedManagerName" data-ng-change="filterFundList()">
+        <label class="input-group-addon">Fund House: </label>
+        <select class="form-control" data-ng-model="selectedFundHouse" data-ng-change="filterFundList()">
             <option value="">Any</option>
-            <option data-ng-repeat="fn in managerNames" value="{{fn}}">{{fn}}</option>
+            <option data-ng-repeat="fn in fundHouses" value="{{fn}}">{{fn}}</option>
         </select>
         </div>
         <div class="input-group">
         <label class="input-group-addon">Fund Name: </label>
-        <input type="text" class="form-control" placeholder="Type a Scheme Name"
-               data-ng-model="selectedScheme"
-               uib-typeahead="fund as fund.schemeName for fund in filteredList | filter:{schemeName:$viewValue} | limitTo:10"
+        <input type="text" class="form-control" placeholder="Type a Fund Name"
+               data-ng-model="selectedFund"
+               uib-typeahead="fund as fund.fundNameRaw for fund in filteredList | filter:{fundNameRaw:$viewValue} | limitTo:10"
                typeahead-show-hint="true"
                typeahead-min-length="1"
                typeahead-editable="false">

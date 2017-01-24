@@ -19,16 +19,16 @@ module.exports = ['portfolioService','fundService','$stateParams',
                 $scope.openDatePicker = false;
 
                 $scope.getFundsForDate = function(navDate) {
-                    $scope.newTxn.date = moment(navDate).format();
+                    $scope.newTxn.txnDate = moment(navDate).format();
                     $scope.fundList = [];
                     fundService.getAllFunds(navDate).then(function (res) {
                         $scope.fundList = res;
                     });
                 };
 
-                $scope.getSelectedSchemeNAV = function() {
-                    fundService.getFundNAV($scope.selectedScheme.schemeCode).then(function(navData) {
-                        var idx = _.indexOf(navData.dates,$scope.newTxn.date);
+                $scope.getSelectedFundNAV = function() {
+                    fundService.getFundNAV($scope.selectedFund._id).then(function(navData) {
+                        var idx = _.indexOf(navData.dates,$scope.newTxn.txnDate);
                         $scope.newTxn.price = navData.values[idx];
                     })
                 };
@@ -42,13 +42,13 @@ module.exports = ['portfolioService','fundService','$stateParams',
                 $scope.clearNewTransaction = function() {
                     $scope.showNewTransactionRow = false;
                     $scope.newTxn = {};
-                    $scope.selectedScheme = null;
+                    $scope.selectedFund = null;
                 };
 
                 $scope.addTransaction = function() {
-                    $scope.newTxn.schemeCode = $scope.selectedScheme.schemeCode;
-                    $scope.newTxn.schemeName = $scope.selectedScheme.schemeName;
-                    $scope.newTxn.date = moment($scope.newTxn.date).format('YYYY-MM-DD');
+                    $scope.newTxn.assetCode = $scope.selectedFund._id;
+                    $scope.newTxn.assetName = $scope.selectedFund.fundNameRaw;
+                    $scope.newTxn.txnDate = moment($scope.newTxn.txnDate).format('YYYY-MM-DD');
                     $scope.newTxn.quantity = $scope.newTxn.cashflow / $scope.newTxn.price;
                     portfolioService.addNewTransactionToPortfolio(portfolioId,$scope.newTxn).then(function() {
                         $scope.clearNewTransaction();

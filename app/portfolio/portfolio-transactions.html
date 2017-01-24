@@ -28,10 +28,10 @@
                     <span data-ng-show="navDate && !fundList.length" class="fa fa-spin fa-spinner"></span>
                     <span data-ng-show="navDate && fundList.length">
                     <input type="text" class="form-control typeahead" placeholder="Type a Scheme Name"
-                           data-ng-model="selectedScheme"
-                           uib-typeahead="fund as fund.schemeName for fund in fundList | filter:{schemeName:$viewValue} | limitTo:10"
+                           data-ng-model="selectedFund"
+                           uib-typeahead="fund as fund.fundNameRaw for fund in fundList | filter:{fundNameRaw:$viewValue} | limitTo:10"
                            typeahead-show-hint="true"
-                           typeahead-on-select="getSelectedSchemeNAV()"
+                           typeahead-on-select="getSelectedFundNAV()"
                            typeahead-min-length="1"
                            typeahead-editable="false"></span>
                 </td>
@@ -51,8 +51,8 @@
                 </td>
             </tr>
             <tr data-ng-repeat="txn in transactionList">
-                <td>{{txn.date | date:'mediumDate'}}</td>
-                <td>{{txn.schemeName}}</td>
+                <td>{{txn.txnDate | date:'mediumDate'}}</td>
+                <td>{{txn.assetName}}</td>
                 <td>{{txn.cashflow}}</td>
                 <td>{{txn.quantity | number:3 }}</td>
                 <td>{{txn.cashflow / txn.quantity | number:3}}</td>

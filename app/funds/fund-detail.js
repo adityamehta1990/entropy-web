@@ -14,9 +14,9 @@ module.exports = ['fundService','$stateParams','dataService',
             scope: {},
             templateUrl: '/templates/funds/fund-detail.html',
             link: function ($scope) {
-                var schemeCode = $stateParams.schemeCode;
+                var _id = $stateParams._id;
                 // meta data
-                fundService.getFundData(schemeCode).then(function(res) {
+                fundService.getFundData(_id).then(function(res) {
                     $scope.fundData = _.mapKeys(res,function(val,key) {
                         return _.startCase(key);
                     });
@@ -39,7 +39,7 @@ module.exports = ['fundService','$stateParams','dataService',
                 _.set(navChartOptions,'chart.renderTo','nav-chart-container');
                 var navChart = new Highcharts.StockChart(navChartOptions);
 
-                fundService.getFundNAV(schemeCode).then(function(res) {
+                fundService.getFundNAV(_id).then(function(res) {
                     navChart.addSeries({
                         name: 'Fund NAV',
                         data: dataService.curveDataForChart(res),
@@ -67,7 +67,7 @@ module.exports = ['fundService','$stateParams','dataService',
                     }
                     returnChart.colorCounter = 0;
                     returnChart.symbolCounter = 0;
-                    fundService.getFundReturn(schemeCode,$scope.chosenPeriod).then(function (res) {
+                    fundService.getFundReturn(_id,$scope.chosenPeriod).then(function (res) {
                         returnChart.addSeries({
                             name: 'Fund Returns',
                             data: _.map(dataService.curveDataForChart(res),function(val) {

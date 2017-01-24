@@ -26,7 +26,7 @@ app.config(['$stateProvider','$urlRouterProvider',
                 template: '<fund-selector></fund-selector>'
             })
             .state('funds.detail', {
-                url: '/:schemeCode',
+                url: '/:_id',
                 template: '<fund-detail></fund-detail>'
             });
         }
